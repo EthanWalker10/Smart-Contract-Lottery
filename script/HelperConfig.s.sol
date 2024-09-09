@@ -5,6 +5,7 @@ import {LinkToken} from "../test/mocks/LinkToken.sol";
 import {Script, console2} from "forge-std/Script.sol";
 import {VRFCoordinatorV2_5Mock} from "@chainlink/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
 
+// so we can inherit the constants
 abstract contract CodeConstants {
     uint96 public MOCK_BASE_FEE = 0.25 ether;
     uint96 public MOCK_GAS_PRICE_LINK = 1e9;
@@ -29,7 +30,7 @@ contract HelperConfig is CodeConstants, Script {
     //////////////////////////////////////////////////////////////*/
     struct NetworkConfig {
         uint256 subscriptionId;
-        bytes32 gasLane;
+        bytes32 gasLane; // the maximum gas price you are willing to pay for a request in WEI
         uint256 automationUpdateInterval;
         uint256 raffleEntranceFee;
         uint32 callbackGasLimit;
@@ -63,11 +64,13 @@ contract HelperConfig is CodeConstants, Script {
     }
 
     function getConfigByChainId(uint256 chainId) public returns (NetworkConfig memory) {
+        // there is a VRF coordinator, so we are on a true net
         if (networkConfigs[chainId].vrfCoordinatorV2_5 != address(0)) {
             return networkConfigs[chainId];
         } else if (chainId == LOCAL_CHAIN_ID) {
             return getOrCreateAnvilEthConfig();
         } else {
+            // if there is not a VRF coordinator and we are not on a local chain, we revert
             revert HelperConfig__InvalidChainId();
         }
     }
@@ -107,6 +110,7 @@ contract HelperConfig is CodeConstants, Script {
         console2.log(unicode"⚠️ You have deployed a mock conract!");
         console2.log("Make sure this was intentional");
         vm.startBroadcast();
+        // deploy a VRF Coordinator
         VRFCoordinatorV2_5Mock vrfCoordinatorV2_5Mock =
             new VRFCoordinatorV2_5Mock(MOCK_BASE_FEE, MOCK_GAS_PRICE_LINK, MOCK_WEI_PER_UINT_LINK);
         LinkToken link = new LinkToken();
@@ -114,7 +118,7 @@ contract HelperConfig is CodeConstants, Script {
         vm.stopBroadcast();
 
         localNetworkConfig = NetworkConfig({
-            subscriptionId: subscriptionId,
+            subscriptionId: subscriptionId, // If left as 0, our scripts will create one!
             gasLane: 0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c, // doesn't really matter
             automationUpdateInterval: 30, // 30 seconds
             raffleEntranceFee: 0.01 ether,
