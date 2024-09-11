@@ -5,7 +5,7 @@ import {LinkToken} from "../test/mocks/LinkToken.sol";
 import {Script, console2} from "forge-std/Script.sol";
 import {VRFCoordinatorV2_5Mock} from "@chainlink/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
 
-// so we can inherit the constants
+// we can inherit the constants by inheritng this contract
 abstract contract CodeConstants {
     uint96 public MOCK_BASE_FEE = 0.25 ether;
     uint96 public MOCK_GAS_PRICE_LINK = 1e9;
@@ -36,7 +36,7 @@ contract HelperConfig is CodeConstants, Script {
         uint32 callbackGasLimit;
         address vrfCoordinatorV2_5;
         address link;
-        address account;
+        address account;  // 
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -118,7 +118,7 @@ contract HelperConfig is CodeConstants, Script {
         vm.stopBroadcast();
 
         localNetworkConfig = NetworkConfig({
-            subscriptionId: subscriptionId, // If left as 0, our scripts will create one!
+            subscriptionId: subscriptionId, // we mock one.
             gasLane: 0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c, // doesn't really matter
             automationUpdateInterval: 30, // 30 seconds
             raffleEntranceFee: 0.01 ether,

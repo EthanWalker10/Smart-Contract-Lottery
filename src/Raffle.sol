@@ -14,6 +14,7 @@ import {AutomationCompatibleInterface} from "@chainlink/contracts/src/v0.8/inter
  */
 contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
     /* Errors 
+    * gas efficient
     * define custom errors by combining the contract name with a description
     */
     error Raffle__UpkeepNotNeeded(uint256 currentBalance, uint256 numPlayers, uint256 raffleState);
@@ -126,7 +127,7 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
         s_raffleState = RaffleState.CALCULATING;
 
         // Will revert if subscription is not set and funded.
-        // s_vrfCoordinator is from parent constract
+        // **s_vrfCoordinator is from parent constract**
         // s_vrfCoordinator should be used by consumers to make requests to vrfCoordinator
         // so that coordinator reference is updated after migration
         // function requestRandomWords(VRFV2PlusClient.RandomWordsRequest calldata req) external returns (uint256 requestId);
@@ -145,6 +146,8 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
             })
         );
         // Quiz... is this redundant?
+        // Yes, because there is an event including 'requestid' in `s_vrfCoordinator.requestRandomWords` function
+        // And everything costs gas.
         emit RequestedRaffleWinner(requestId);
     }
 
@@ -153,6 +156,7 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
      * calls to send the money to the random winner.
      * we have only one word in randomWords because we set NUM_WORDS = 1
      */
+    // it's called by the Chainlink node
     function fulfillRandomWords(uint256, /* requestId */ uint256[] calldata randomWords) internal override {
         uint256 indexOfWinner = randomWords[0] % s_players.length;
         address payable recentWinner = s_players[indexOfWinner];

@@ -9,6 +9,9 @@ import {VRFCoordinatorV2_5Mock} from "@chainlink/contracts/src/v0.8/vrf/mocks/VR
 import {LinkToken} from "../test/mocks/LinkToken.sol";
 import {CodeConstants} from "./HelperConfig.s.sol";
 
+// This is where we'll take care of the subscription creation.
+
+// 创建一个新的 Chainlink VRF v2.5 订阅
 contract CreateSubscription is Script {
     function createSubscriptionUsingConfig() public returns (uint256, address) {
         HelperConfig helperConfig = new HelperConfig();
@@ -20,6 +23,7 @@ contract CreateSubscription is Script {
     function createSubscription(address vrfCoordinatorV2_5, address account) public returns (uint256, address) {
         console.log("Creating subscription on chainId: ", block.chainid);
         vm.startBroadcast(account);
+        // typecasting
         uint256 subId = VRFCoordinatorV2_5Mock(vrfCoordinatorV2_5).createSubscription();
         vm.stopBroadcast();
         console.log("Your subscription Id is: ", subId);
@@ -32,6 +36,7 @@ contract CreateSubscription is Script {
     }
 }
 
+// 将消费者合约（即需要使用随机数的合约）添加到已经存在的 VRF 订阅中
 contract AddConsumer is Script {
     function addConsumer(address contractToAddToVrf, address vrfCoordinator, uint256 subId, address account) public {
         console.log("Adding consumer contract: ", contractToAddToVrf);
@@ -44,6 +49,7 @@ contract AddConsumer is Script {
 
     function addConsumerUsingConfig(address mostRecentlyDeployed) public {
         HelperConfig helperConfig = new HelperConfig();
+        // Directly call getConfig(), it's a encapsulation of getConfigByChainId
         uint256 subId = helperConfig.getConfig().subscriptionId;
         address vrfCoordinatorV2_5 = helperConfig.getConfig().vrfCoordinatorV2_5;
         address account = helperConfig.getConfig().account;
@@ -57,6 +63,7 @@ contract AddConsumer is Script {
     }
 }
 
+// 为 VRF 订阅提供资金，确保 VRF 服务能够正常运行
 contract FundSubscription is CodeConstants, Script {
     uint96 public constant FUND_AMOUNT = 3 ether;
 
@@ -84,6 +91,7 @@ contract FundSubscription is CodeConstants, Script {
         console.log("On ChainID: ", block.chainid);
         if (block.chainid == LOCAL_CHAIN_ID) {
             vm.startBroadcast(account);
+            // typecasting and mock
             VRFCoordinatorV2_5Mock(vrfCoordinatorV2_5).fundSubscription(subId, FUND_AMOUNT);
             vm.stopBroadcast();
         } else {
